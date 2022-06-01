@@ -1,0 +1,7 @@
+*.csv
+*.json
+log/
+*.pyc
+*.pickle
+*.model
+*.xlsx
