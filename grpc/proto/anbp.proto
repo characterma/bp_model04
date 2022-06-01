@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package pyserver;
+
+option java_multiple_files = true;
+option java_package = "org.jpdna.grpchello";
+option java_outer_classname = "PyServerProto";
+
+// 创建服务
+service Greeter {
+  rpc ANBP (BPRequest) returns (BPReply) {}
+}
+
+// anbp 请求参数
+message BPRequest {
+  string userInfo = 1; //用户信息,身高、性别、年龄、体重，再增加一个 wear_user_id，key-value形式
+  string oStatus = 2;  // model的版本,这个是旧血压模型的字段, 对于新模型,当oStatus为 -1 时, 表示是添加用户, 根据userInfo的 wear_user_id 查找训练数据, 训练此用户的personal_model
+  string features= 3; //ppg提取特征
+  string preReportBP = 4; //上一个有效的血压值，格式为 "128,65,90"
+  string preReportTimeDiffMinute = 5; //上一个有效值到现在的时间，以分钟算,为int
+}
+
+// anbp 返回参数
+message BPReply {
+  string status = 1; //状态码
+  string bloodPpressure = 2;  //血压值
+  string timestamp = 3; // 时间戳
+//  string conclusion = 3;  //结论
+}
+//python -m grpc_tools.protoc -I=./ --python_out=. --grpc_python_out=. anbp.proto
+//python -m grpc_tools.protoc -I=./grpc/proto --python_out=./grpc/proto --grpc_python_out=./grpc/proto anbp.proto
+
