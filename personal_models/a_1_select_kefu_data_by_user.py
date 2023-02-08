@@ -15,6 +15,46 @@ from andun_sql.andun_sql import AndunSql
 并找出每一条数据 当天对应的 ppg feature, 保存
 """
 
+def feature_process(ppg_list, wear_user_id, date, device_version):
+    ppg_history = []
+
+    for ps in ppg_list.split(";"):
+        if len(ps) == 0:
+            continue
+        try:
+            temp_ppg_history = []
+            ppg_time, ppg_values = ps.split("/", 1)
+
+            temp_ppg_history.append(wear_user_id)
+            temp_ppg_history.append(ppg_time)
+            # ppg_values = ps.split("/")[1]
+            ppg_values = list(ppg_values.split(','))
+            if device_version in {'4P'}:
+                if 40 == len(ppg_values):
+                    print("上传的feature数组长度为{},只有一组PPG特征值".format(len(ppg_values)))
+                    temp_ppg_history.append(",".join(ppg_values[1:13]))
+                elif len(ppg_values) >= 40:
+                    feature = ppg_values[1:13] + ppg_values[40:]
+                    print("上传的feature数组长度为{},有{}组PPG特征值".format(len(feature), len(feature)/12))
+                    temp_ppg_history.append(','.join(feature))
+                else:
+                    print('feature exception……')
+                temp_ppg_history.append(date)
+                ppg_history.append(temp_ppg_history)
+            else:
+                if len(ppg_values) % 12 == 0:
+                    temp_ppg_history.append(",".join(ppg_values))
+                    temp_ppg_history.append(date)
+                    ppg_history.append(temp_ppg_history)
+                else:
+                    print("此用户{}当天{}ppg数据长度有误...".format(wear_user_id, date))
+
+        except Exception as e:
+            print(e)
+            # print("ppg_list:", ppg_list)
+            continue
+    return ppg_history
+
 
 
 def select_kefu_data_by_user(wear_user_id):
@@ -24,7 +64,7 @@ def select_kefu_data_by_user(wear_user_id):
     # 按照设置的时间查出 所有优化过的用户
     # sql_select_users = 'SELECT wear_user_id, gmt_create, sbp, dbp FROM andun_cms.c_bp_history WHERE wear_user_id="{}" AND create_time >= "{}";'.format(wear_user_id, set_time)
     # sql_select_users = 'SELECT wear_user_id, gmt_create, sbp, dbp FROM andun_cms.c_bp_history WHERE wear_user_id="{}" AND enabled=1;'.format(wear_user_id)
-    sql_select_users = 'SELECT wear_user_id, gmt_create, sbp, dbp FROM andun_cms.c_bp_history WHERE wear_user_id="{}";'.format(wear_user_id)
+    sql_select_users = 'SELECT wear_user_id, gmt_create, sbp, dbp FROM andun_cms.c_bp_history WHERE wear_user_id="{}" AND status=0 AND is_overdue=1;'.format(wear_user_id)
     select_users = ansql.ansql_read_mysql(sql_select_users)
     select_users['wear_user_id'].astype(str)
     select_users.to_csv("personal_models/data/{}_kefu_history.csv".format(wear_user_id), index=False)
@@ -44,36 +84,40 @@ def select_kefu_data_by_user(wear_user_id):
     for ud in unique_days:
         print("{} - {}".format(wear_user_id, ud))        
         # temp_ud = uu_bp_feature[uu_bp_feature['DATE'] == datetime.date(datetime.strptime(str(ud), '%Y-%m-%d'))]
-        temp_ud = ansql.ansql_bp_feature_train(wear_user_id, [ud])
+        temp_ud = ansql.ansql_bp_feature_and_device_version(wear_user_id, [ud])
 
         if temp_ud.shape[0] > 0:
         
             # 把 当天的  ppg信号解析
             ppg_list = temp_ud['FROMPPG'].values[0]
+            device_version = temp_ud["device_version"].values[0]
+            part_ppg_history = feature_process(ppg_list=ppg_list, wear_user_id=wear_user_id, date=ud,
+                                               device_version=device_version)
+            ppg_history.extend(part_ppg_history)
             
-            for ps in ppg_list.split(";"):
-                if len(ps) == 0:
-                    continue
-                try:
-                    temp_ppg_history = []
-
-                    ppg_time, ppg_values = ps.split("/", 1)
-                    # ppg_values = ps.split("/")[1]
-                    ppg_values = list(ppg_values.split(","))
-                    if len(ppg_values) % 12 == 0:
-                        temp_ppg_history.append(wear_user_id)
-                        temp_ppg_history.append(ppg_time)
-                        temp_ppg_history.append(",".join(ppg_values))
-                        temp_ppg_history.append(ud)
-
-                        ppg_history.append(temp_ppg_history)
-                    else:
-                        print("此用户{}当天{}ppg数据长度有误...".format(wear_user_id, ud))
-                
-                except Exception as e:
-                    print(e)
-                    # print("ppg_list:", ppg_list)
-                    continue
+            # for ps in ppg_list.split(";"):
+            #     if len(ps) == 0:
+            #         continue
+            #     try:
+            #         temp_ppg_history = []
+            #
+            #         ppg_time, ppg_values = ps.split("/", 1)
+            #         # ppg_values = ps.split("/")[1]
+            #         ppg_values = list(ppg_values.split(","))
+            #         if len(ppg_values) % 12 == 0:
+            #             temp_ppg_history.append(wear_user_id)
+            #             temp_ppg_history.append(ppg_time)
+            #             temp_ppg_history.append(",".join(ppg_values))
+            #             temp_ppg_history.append(ud)
+            #
+            #             ppg_history.append(temp_ppg_history)
+            #         else:
+            #             print("此用户{}当天{}ppg数据长度有误...".format(wear_user_id, ud))
+            #
+            #     except Exception as e:
+            #         print(e)
+            #         # print("ppg_list:", ppg_list)
+            #         continue
         else:
             print("此用户{}当天{}无ppg数据...".format(wear_user_id, ud))
 

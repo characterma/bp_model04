@@ -85,10 +85,10 @@ ansql = AndunSql()
 # wear_user_id = "9a48a3cb"
 # wear_user_id = "nGWEnb4i"
 # wear_user_id = "LhDVt7QZ"
-wear_user_id = "Xu5wAMxJ"
+wear_user_id = "muQdSf6h"
 
 # set_time = pd.date_range(start='2021-06-20', end='2021-06-22')
-set_time = pd.date_range(start='2022-05-11', end='2022-05-12')
+set_time = pd.date_range(start='2023-01-29', end='2023-01-30')
 # set_time = pd.date_range(start='2020-08-15', end='2020-08-16')
 # set_time = pd.date_range(start='2020-11-01', end='2020-11-10')
 # set_time = pd.date_range(start='2021-06-01', end='2021-06-12')

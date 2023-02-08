@@ -121,7 +121,7 @@ class Greeter(anbp_pb2_grpc.GreeterServicer):
                 bp_train_log.logger.info("{} 根据客服记录的用户测量的每次的血压时间, 找出同一天手环 里面最接近 对应时间点的ppg信号数据".format(wear_user_id))
                 # 根据客服记录的用户测量的每次的血压时间, 找出同一天手环 里面最接近 对应时间点的ppg信号数据
                 find_feature_bp_by_user(wear_user_id=wear_user_id, min_minute=Min_Minute)
-                bp_train_log.logger.info("{} 训练 personal_model".format(wear_user_id))
+                bp_train_log.logger.info("{} 训练 personal_model, oStatus: {}".format(wear_user_id, oStatus))
                 # 训练 personal_model
                 if oStatus == "-1":
                     model_lr(wear_user_id=wear_user_id)
@@ -237,6 +237,7 @@ def server():
     # nn_model = Deeplearningmodel()
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=100))
     anbp_pb2_grpc.add_GreeterServicer_to_server(Greeter(), server)
+    print("port: {}".format(PORT))
     server.add_insecure_port('[::]:{}'.format(PORT))
     server.start()
     print("服务启动成功...")

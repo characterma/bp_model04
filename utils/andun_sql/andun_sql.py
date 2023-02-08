@@ -83,6 +83,53 @@ class AndunSql:
 
         return res
 
+    def ansql_bp_feature_and_device_version(self, wear_user_id, date):
+        if len(date) > 1:
+            sql_s = """
+            select 
+                a.DEVICE_ID as device_id, 
+                a.WEAR_USER_ID as wear_user_id, 
+                b.DEVICE_VERSION as device_version, 
+                a.DATE as date,
+                a.FROMPPG as FROMPPG
+            from (
+                              SELECT WEAR_USER_ID, DATE, FROMPPG, DEVICE_ID
+                              FROM andun_watch.d_bp_feature_model
+                              where WEAR_USER_ID in ('{}')
+                                and DATE in {}
+                          ) as a
+            left join (
+                select ID, DEVICE_VERSION
+                from andun_watch.a_device
+                ) as b
+            on a.DEVICE_ID=b.id
+            """.format(wear_user_id, date)
+        elif len(date) == 1:
+            sql_s = """
+                        select 
+                            a.DEVICE_ID as device_id, 
+                            a.WEAR_USER_ID as wear_user_id, 
+                            b.DEVICE_VERSION as device_version, 
+                            a.DATE as date,
+                            a.FROMPPG as FROMPPG
+                        from (
+                                          SELECT WEAR_USER_ID, DATE, FROMPPG, DEVICE_ID
+                                          FROM andun_watch.d_bp_feature_model
+                                          where WEAR_USER_ID in ('{}')
+                                            and DATE = '{}'
+                                      ) as a
+                        left join (
+                            select ID, DEVICE_VERSION
+                            from andun_watch.a_device
+                            ) as b
+                        on a.DEVICE_ID=b.id
+                        """.format(wear_user_id, date[0])
+        else:
+            return None
+
+        res = self.ansql_read_mysql(sql_s)
+
+        return res
 
 
     def ansql_bp_feature_with_date_range(self, wear_user_id, date_range):

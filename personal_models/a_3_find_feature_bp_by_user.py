@@ -189,7 +189,7 @@ def find_feature_bp_by_user(wear_user_id, min_minute):
 
 if __name__ == "__main__":
 
-    wear_user_id = "a59cacfa"
+    wear_user_id = "d9bNkAGS"
     # 设置 时间差 3min, 用于寻找 用户自己测量血压的时间和 ppg信号时间的匹配, 大于此时间差的直接排除, 从剩余的里面找出时间差最小的
     min_minute = Min_Minute
 
